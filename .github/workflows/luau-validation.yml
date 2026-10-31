@@ -37,3 +37,7 @@ jobs:
             echo "Checking $file"
             luau-compile "$file" >/dev/null
           done < <(find src dist -type f -name '*.lua' -print0)
+          if grep -nE 'require\(script\.Parent\.' dist/UltraBoost-Premium-DEV.lua; then
+            echo "Standalone Premium bundle must not depend on sibling ModuleScripts."
+            exit 1
+          fi
