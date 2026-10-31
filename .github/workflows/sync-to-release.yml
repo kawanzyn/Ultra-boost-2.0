@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: public-basic-release
+  cancel-in-progress: true
+
 jobs:
   sync:
     if: github.repository == 'kawanzyn/Ultra-boost-2.0'
@@ -51,7 +55,7 @@ jobs:
           # --delete removes previously published Premium/source files.
           rsync -a --delete \
             --exclude='.git/' \
-            --exclude='.github/workflows/luau-validation.yml' \
+            --exclude='/.github/workflows/luau-validation.yml' \
             source/release-public/ release/
 
           mkdir -p release/dist
