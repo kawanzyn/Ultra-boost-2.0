@@ -5,7 +5,7 @@
 - A successful compile confirms syntax only. It does not execute Roblox APIs or simulate Delta.
 
 ## Visual engine and dashboard
-- [ ] Open every dashboard tab on an iPhone-sized viewport.
+- [ ] Open every dashboard tab on portrait and landscape Android/iOS viewports.
 - [ ] Verify touch navigation, dragging, minimize and quick-open.
 - [ ] Test Ultra, Balanced and Light; confirm Restore All.
 - [ ] Toggle every Custom Mode option independently and in combinations.
@@ -32,7 +32,9 @@
 
 ## Live runtime tests — not yet performed
 - [ ] Live public server API query.
-- [ ] iPhone/Delta test with the exact executor/runtime version.
+- [ ] iPhone and Android tests on real devices, recording device model, OS, Roblox version, executor/runtime version and game PlaceId.
+- [ ] On each device, record the same scene for 60 seconds before and after applying Light, Balanced and Ultra; compare the Roblox in-game FPS/debug counter or an OS-level frame counter, not only the UltraBoost estimate.
+- [ ] Verify mesh texture simplification and Restore All on both MeshPart and SpecialMesh examples.
 - [ ] Confirm HTTP transport is available.
 - [ ] Confirm TeleportToPlaceInstance is callable and permitted.
 - [ ] Verify destination arrival separately from request accepted/teleport started.
