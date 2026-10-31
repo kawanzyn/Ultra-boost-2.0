@@ -1,6 +1,7 @@
 # Changelog
 
 ## v2.0.0-alpha.2 — Premium DEV dashboard
+- Fixed the standalone bundle's Server Finder dependency injection so it uses the already-bundled HTTP client instead of requiring a missing sibling ModuleScript.
 - Replaced the Basic-only visual panel in the Premium DEV bundle with a unified responsive multi-page dashboard.
 - Added Home/Intelligence overview, Custom Mode controls, Auto Optimizer, Performance Lab, Server Finder, Smart Restore, Game Profiles and Settings.
 - Added selectable 30/45/60 FPS targets with hysteresis to reduce rapid mode switching.
