@@ -1,0 +1,55 @@
+name: Sync private source to public release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: github.repository == 'kawanzyn/Ultra-boost-2.0'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout private source
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Checkout public release
+        uses: actions/checkout@v4
+        with:
+          repository: kawanzyn/Ultra-boost-2.0-Release
+          token: ${{ secrets.RELEASE_SYNC_TOKEN }}
+          path: release
+          ref: main
+
+      - name: Sync files
+        run: |
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.github/workflows/sync-to-release.yml' \
+            source/ release/
+
+          # Keep the legacy Basic loader path working in the public repository.
+          cp source/dist/UltraBoost-Basic.lua release/UltraBoost.lua
+
+      - name: Publish changes
+        working-directory: release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+
+          git commit -m "Automated mirror from private source"
+          git push origin HEAD:main
