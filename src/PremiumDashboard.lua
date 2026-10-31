@@ -102,7 +102,9 @@ function Dashboard.new(screen, api)
 	self.api = api
 	self.destroyed = false
 	self.activePage = "Home"
-	self.mode = "Original"
+	self.mode = api.getMode and (api.getMode() or "Original") or "Original"
+	self.lastMode = nil
+	self.collisionEnabled = false
 	self.targetFps = 45
 	self.autoEnabled = false
 	self.autoProtection = true
@@ -351,9 +353,7 @@ function Dashboard:_BuildHome()
 	local modes = { { "ULTRA", "Ultra", C.blue }, { "EQUILIBRADO", "Balanced", C.card2 }, { "LEVE", "Light", C.green } }
 	for index, item in ipairs(modes) do
 		local b = button(quick, item[1], item[3], UDim2.new(1, 0, 0, 27), function()
-			self.api.applyMode(item[2])
-			self.mode = item[2]
-			self:RefreshHome()
+			self:ApplyMode(item[2])
 		end)
 		b.Position = UDim2.fromOffset(0, 23 + (index - 1) * 31)
 		b.TextSize = 9
@@ -372,16 +372,14 @@ function Dashboard:_BuildOptimizer()
 	for index, item in ipairs(modes) do
 		local y = 24 + (index - 1) * 34
 		local b = button(modeCard, item[1] .. "  •  " .. item[2], item[3], UDim2.new(1, 0, 0, 29), function()
-			self.api.applyMode(item[1])
-			self.mode = item[1]
-			self:RefreshHome()
+			self:ApplyMode(item[1])
 		end)
 		b.Position = UDim2.fromOffset(0, y)
 		b.TextXAlignment = Enum.TextXAlignment.Left
 		b.TextSize = 9
 	end
 
-	local custom = self:_Card(page, 316)
+	local custom = self:_Card(page, 360)
 	label(custom, "CUSTOM MODE", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
 	label(custom, "Monte sua própria combinação. As alterações são locais e reversíveis quando o valor original foi registrado.", UDim2.new(1, 0, 0, 34), C.muted, false).Position = UDim2.fromOffset(0, 22)
 	local toggleItems = {
@@ -407,11 +405,19 @@ function Dashboard:_BuildOptimizer()
 		self:_UpdateCustomButton(item[1], item[2])
 	end
 	self.customApply = button(custom, "APLICAR MEU CUSTOM MODE", C.blue, UDim2.new(1, 0, 0, 32), function()
-		self.api.applyCustom(self.customSettings)
-		self.mode = "Custom"
-		self:RefreshHome()
+		self:ApplyCustom()
 	end)
 	self.customApply.Position = UDim2.fromOffset(0, 224)
+	self.collisionButton = button(custom, "COLISÃO AMBIENTAL: OFF", C.card2, UDim2.new(1, 0, 0, 30), function()
+		self.collisionEnabled = not self.collisionEnabled
+		local ok = self.api.setCollisionEnabled(self.collisionEnabled)
+		if not ok then
+			self.collisionEnabled = not self.collisionEnabled
+		end
+		self.collisionButton.Text = "COLISÃO AMBIENTAL: " .. (self.collisionEnabled and "ON" or "OFF")
+		self.collisionButton.BackgroundColor3 = self.collisionEnabled and C.orange or C.card2
+	end)
+	self.collisionButton.Position = UDim2.fromOffset(0, 266)
 end
 
 function Dashboard:_UpdateCustomButton(key, title)
@@ -455,6 +461,9 @@ function Dashboard:_BuildAuto()
 	self.autoToggle = button(toggle, "ATIVAR AUTO OPTIMIZER", C.blue, UDim2.new(1, 0, 0, 42), function()
 		self.autoEnabled = not self.autoEnabled
 		self.autoLowCount, self.autoHighCount = 0, 0
+		if self.autoEnabled then
+			self.autoModeIndex = self.mode == "Ultra" and 3 or (self.mode == "Balanced" and 2 or 1)
+		end
 		self.autoToggle.Text = self.autoEnabled and "DESATIVAR AUTO OPTIMIZER" or "ATIVAR AUTO OPTIMIZER"
 		self.autoToggle.BackgroundColor3 = self.autoEnabled and C.red or C.blue
 		self.autoStatus.Text = "Status: " .. (self.autoEnabled and "ATIVO" or "DESLIGADO")
@@ -527,7 +536,7 @@ end
 
 function Dashboard:_BuildFinder()
 	local page = "Finder"
-	local controls = self:_Card(page, 174)
+	local controls = self:_Card(page, 204)
 	label(controls, "SERVER FINDER", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
 	label(controls, "Filtros locais sobre a lista pública. População e ping podem mudar antes da entrada.", UDim2.new(1, 0, 0, 30), C.muted, false).Position = UDim2.fromOffset(0, 22)
 	local modes = { "Empty Server", "Low Population", "Oldest Empty", "Low Ping", "Balanced" }
@@ -546,10 +555,29 @@ function Dashboard:_BuildFinder()
 	end
 	self:_RefreshFinderModeButtons()
 	self.finderPopulation = make("TextBox", controls, {
+		Name = "MaxPopulation",
 		Position = UDim2.fromOffset(0, 151),
-		Size = UDim2.fromOffset(42, 0),
-		Visible = false,
+		Size = UDim2.fromOffset(64, 25),
+		BackgroundColor3 = C.card2,
+		BorderSizePixel = 0,
+		Text = tostring(self.finderMaxPopulation),
+		PlaceholderText = "Max pop",
+		TextColor3 = C.text,
+		PlaceholderColor3 = C.muted,
+		TextSize = 9,
+		Font = Enum.Font.Gotham,
+		ClearTextOnFocus = false,
 	})
+	corner(self.finderPopulation, 7)
+	self.finderPopulation.FocusLost:Connect(function()
+		local value = tonumber(self.finderPopulation.Text)
+		if value then
+			self.finderMaxPopulation = math.clamp(math.floor(value), 0, 100)
+		else
+			self.finderPopulation.Text = tostring(self.finderMaxPopulation)
+		end
+		self:_RenderFinder()
+	end)
 	local options = self:_Card(page, 72)
 	self.recentButton = button(options, "IGNORAR VISITADOS: ON", C.green, UDim2.new(0.5, -4, 0, 30), function()
 		self.finderIgnoreRecent = not self.finderIgnoreRecent
@@ -798,9 +826,9 @@ function Dashboard:_BuildProfiles()
 			self:_UpdateCustomButton(key, item.title)
 		end
 		if profileData.mode == "Custom" then
-			self.api.applyCustom(self.customSettings)
+			self:ApplyCustom()
 		elseif profileData.mode and profileData.mode ~= "Original" then
-			self.api.applyMode(profileData.mode)
+			self:ApplyMode(profileData.mode)
 		else
 			self.api.restoreAll()
 		end
@@ -831,6 +859,30 @@ function Dashboard:_BuildSettings()
 	label(about, "DIAGNÓSTICO", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
 	self.diagnostic = label(about, "Cliente local • sem acesso a métricas internas do servidor.", UDim2.new(1, 0, 0, 38), C.muted, false)
 	self.diagnostic.Position = UDim2.fromOffset(0, 25)
+	local exit = self:_Card(page, 66)
+	button(exit, "FECHAR E RESTAURAR TUDO", C.red, UDim2.new(1, 0, 0, 42), function()
+		if self.api.close then self.api.close() end
+	end)
+end
+
+function Dashboard:ApplyMode(modeName)
+	self.lastMode = self.mode
+	local ok = self.api.applyMode(modeName)
+	if ok ~= false then
+		self.mode = modeName
+		self:RefreshHome()
+	end
+	return ok
+end
+
+function Dashboard:ApplyCustom()
+	self.lastMode = self.mode
+	local ok = self.api.applyCustom(self.customSettings)
+	if ok ~= false then
+		self.mode = "Custom"
+		self:RefreshHome()
+	end
+	return ok
 end
 
 function Dashboard:ShowPage(name)
@@ -934,15 +986,13 @@ function Dashboard:_AutoStep(fps, average)
 	if self.autoLowCount >= (self.autoProtection and 3 or 2) and self.autoModeIndex < #self.autoModes then
 		self.autoModeIndex += 1
 		local nextMode = self.autoModes[self.autoModeIndex]
-		self.api.applyMode(nextMode)
-		self.mode = nextMode
+		self:ApplyMode(nextMode)
 		self.autoLowCount, self.autoHighCount = 0, 0
 		self.autoStatus.Text = "Status: ATIVO • aplicou " .. nextMode
 	elseif self.autoHighCount >= (self.autoProtection and 8 or 5) and self.autoModeIndex > 1 then
 		self.autoModeIndex -= 1
 		local nextMode = self.autoModes[self.autoModeIndex]
-		self.api.applyMode(nextMode)
-		self.mode = nextMode
+		self:ApplyMode(nextMode)
 		self.autoLowCount, self.autoHighCount = 0, 0
 		self.autoStatus.Text = "Status: ATIVO • recuperou " .. nextMode
 	end
