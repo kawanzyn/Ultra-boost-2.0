@@ -1,9 +1,12 @@
 --[[
-	ULTRABOOST BASIC v2.0.0-alpha.1 (visual engine based on v0.4.0)
-	Client-side visual tuning with reversible Ultra, Balanced and Light modes.
+	ULTRABOOST PREMIUM DEV v2.0.0-alpha.2 (internal test build)
+	Unified dashboard, reversible visual tuning, Custom Mode, Auto Optimizer,
+	Performance Lab, Smart Restore and Server Finder.
 
-	Uses standard client-side Roblox/Luau APIs only. No HTTP loader, executor-only
-	APIs, hidden APIs, remote calls, instance deletion, or anti-cheat bypasses.
+	Visual changes are client-side. Server Finder probes runtime HTTP/teleport
+	capabilities and may be unavailable in some executors. No account cookies,
+	anti-cheat bypass, hidden APIs, server mutation or remote-event abuse.
+	Internal DEV build: no key authentication or monetized license backend.
 	Use only where local scripts are permitted. Results vary by experience/device.
 ]]
 
