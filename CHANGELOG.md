@@ -1,6 +1,9 @@
 # Changelog
 
 ## v2.0.0-alpha.2 — Premium DEV dashboard
+- Prefer client `RunService.PreRender` for FPS cadence sampling, with a `Heartbeat` fallback for older runtimes.
+- Extend reversible visual texture simplification to eligible `MeshPart.TextureID` and `SpecialMesh.TextureId` instances.
+- Document Android/iOS compatibility as device/runtime-dependent and add a real-device comparison checklist.
 - Fixed the standalone bundle's Server Finder dependency injection so it uses the already-bundled HTTP client instead of requiring a missing sibling ModuleScript.
 - Replaced the Basic-only visual panel in the Premium DEV bundle with a unified responsive multi-page dashboard.
 - Added Home/Intelligence overview, Custom Mode controls, Auto Optimizer, Performance Lab, Server Finder, Smart Restore, Game Profiles and Settings.
