@@ -782,10 +782,20 @@ function Dashboard:_BuildRestore()
 	end
 	local undo = button(actions, "DESFAZER ÚLTIMO MODO", C.orange, UDim2.new(1, 0, 0, 34), function()
 		self.api.restoreAll()
-		if self.lastMode and self.lastMode ~= "Original" then
-			self.api.applyMode(self.lastMode)
+		self.collisionEnabled = false
+		if self.collisionButton then
+			self.collisionButton.Text = "COLISÃO AMBIENTAL: OFF"
+			self.collisionButton.BackgroundColor3 = C.card2
 		end
-		self.mode = "Original"
+		if self.lastMode == "Custom" then
+			self.api.applyCustom(self.customSettings)
+			self.mode = "Custom"
+		elseif self.lastMode and self.lastMode ~= "Original" then
+			self.api.applyMode(self.lastMode)
+			self.mode = self.lastMode
+		else
+			self.mode = "Original"
+		end
 		self:RefreshHome()
 	end)
 	undo.Position = UDim2.fromOffset(0, 148)
@@ -795,6 +805,11 @@ function Dashboard:_BuildRestore()
 		self.api.restoreAll()
 		self.mode = "Original"
 		self.lastMode = nil
+		self.collisionEnabled = false
+		if self.collisionButton then
+			self.collisionButton.Text = "COLISÃO AMBIENTAL: OFF"
+			self.collisionButton.BackgroundColor3 = C.card2
+		end
 		self:RefreshHome()
 	end)
 end
