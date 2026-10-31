@@ -2,7 +2,9 @@
 
 ## Automated validation
 
-The public GitHub Actions workflow compiles both Basic distribution files with the Luau compiler and checks that the legacy root file matches the file in `dist/`.
+The public GitHub Actions workflow compiles the Lua files found under `src/` and `dist/`. The public Basic repository intentionally contains no `src/` tree and only the Basic artifact in `dist/`, so the public workflow validates the Basic distribution.
+
+Before publishing, the private release workflow also checks that the legacy root-level `UltraBoost.lua` file is byte-for-byte identical to `dist/UltraBoost-Basic.lua`.
 
 A successful compile verifies syntax only. It does not run Roblox APIs or prove device compatibility.
 
