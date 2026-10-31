@@ -525,7 +525,16 @@ function Dashboard:_BuildAuto()
 		self.autoEnabled = not self.autoEnabled
 		self.autoLowCount, self.autoHighCount = 0, 0
 		if self.autoEnabled then
-			self.autoModeIndex = self.mode == "Ultra" and 3 or (self.mode == "Balanced" and 2 or 1)
+			if self.mode == "Ultra" then
+				self.autoModeIndex = 3
+			elseif self.mode == "Balanced" then
+				self.autoModeIndex = 2
+			else
+				self.autoModeIndex = 1
+				if self.mode ~= "Light" then
+					self:ApplyMode("Light")
+				end
+			end
 		end
 		self.autoToggle.Text = self.autoEnabled and "DESATIVAR AUTO OPTIMIZER" or "ATIVAR AUTO OPTIMIZER"
 		self.autoToggle.BackgroundColor3 = self.autoEnabled and C.red or C.blue
