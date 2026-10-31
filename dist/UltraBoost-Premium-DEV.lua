@@ -264,6 +264,8 @@ end
 local function hideTexture(instance)
 	if instance:IsA("Decal") or instance:IsA("Texture") then
 		rememberAndSet(visualSaved, instance, "Transparency", 1)
+	elseif instance:IsA("SpecialMesh") then
+		rememberAndSet(visualSaved, instance, "TextureId", "")
 	elseif instance:IsA("SurfaceAppearance") then
 		-- Clearing maps exposes the underlying part color/material where supported.
 		for _, property in ipairs({ "ColorMap", "NormalMap", "RoughnessMap", "MetalnessMap" }) do
@@ -297,6 +299,7 @@ local function applyInstance(instance, knownProtected)
 	local isTextureObject = className == "Decal"
 		or className == "Texture"
 		or className == "SurfaceAppearance"
+		or className == "SpecialMesh"
 	local isEffect = isEffectObject(instance)
 
 	if not isPart and not isTextureObject and not isEffect then
@@ -338,6 +341,9 @@ local function applyInstance(instance, knownProtected)
 					rememberAndSet(visualSaved, instance, "Material", SMOOTH)
 					rememberAndSet(visualSaved, instance, "MaterialVariant", "")
 				end
+				if customSettings.hideTextures and className == "MeshPart" then
+					rememberAndSet(visualSaved, instance, "TextureID", "")
+				end
 				if customSettings.hideEnvironment and environment then
 					rememberAndSet(visualSaved, instance, "LocalTransparencyModifier", 1)
 				end
@@ -358,6 +364,9 @@ local function applyInstance(instance, knownProtected)
 		elseif isPart and (ground or environment) then
 			rememberAndSet(visualSaved, instance, "Material", SMOOTH)
 			rememberAndSet(visualSaved, instance, "MaterialVariant", "")
+			if className == "MeshPart" then
+				rememberAndSet(visualSaved, instance, "TextureID", "")
+			end
 
 			if mode == "Ultra" then
 				if environment then
@@ -2447,7 +2456,14 @@ end
 
 function Dashboard:_StartSampling()
 	local runService = game:GetService("RunService")
-	table.insert(self.connections, runService.Heartbeat:Connect(function(dt)
+	local frameSignal = runService.Heartbeat
+	local preRenderOk, preRenderSignal = pcall(function()
+		return runService.PreRender
+	end)
+	if preRenderOk and preRenderSignal then
+		frameSignal = preRenderSignal
+	end
+	table.insert(self.connections, frameSignal:Connect(function(dt)
 		if self.destroyed then return end
 		self.sampleFrames += 1
 		self.sampleElapsed += dt
@@ -2614,7 +2630,14 @@ local function startMonitor()
 		return
 	end
 
-	monitorConnection = RunService.Heartbeat:Connect(function(deltaTime)
+	local frameSignal = RunService.Heartbeat
+	local preRenderOk, preRenderSignal = pcall(function()
+		return RunService.PreRender
+	end)
+	if preRenderOk and preRenderSignal then
+		frameSignal = preRenderSignal
+	end
+	monitorConnection = frameSignal:Connect(function(deltaTime)
 		if destroyed or not monitorEnabled then
 			return
 		end
