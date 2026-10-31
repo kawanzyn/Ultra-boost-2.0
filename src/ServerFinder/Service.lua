@@ -308,7 +308,6 @@ function Service:RecordAttempt(server, state, detail)
 
 	if state == "requested" then
 		self.stats.attempts += 1
-		self.visited[server.id] = { at = now }
 	elseif state == "started" then
 		self.stats.teleportStarted += 1
 	elseif state == "failed" then
@@ -316,6 +315,7 @@ function Service:RecordAttempt(server, state, detail)
 		self.failed[server.id] = { untilAt = now + self.failureCooldown }
 	elseif state == "completed" then
 		self.stats.successes += 1
+		self.visited[server.id] = { at = now }
 	end
 	return true
 end
