@@ -1,0 +1,38 @@
+name: Luau syntax validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: Compile Luau source and standalone files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install Luau compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="$(curl -fsSL https://api.github.com/repos/luau-lang/luau/releases/latest | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
+          curl -fsSL "https://github.com/luau-lang/luau/releases/download/\${tag}/luau-ubuntu.zip" -o /tmp/luau.zip
+          unzip -q /tmp/luau.zip -d /tmp/luau
+          echo "/tmp/luau" >> "\${GITHUB_PATH}"
+
+      - name: Compile every Luau file
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            luau-compile "$file" >/dev/null
+          done < <(find src dist -type f -name '*.lua' -print0)
