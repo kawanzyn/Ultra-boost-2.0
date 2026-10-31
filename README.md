@@ -1,29 +1,37 @@
 # UltraBoost 2.0
 
-This private repository is the development source for the Premium product and the shared visual engine.
+This private repository contains the Premium development line and the shared visual engine.
 
 ## Product split
 
-- **UltraBoost Basic:** public, keyless distribution in kawanzyn/Ultra-boost-2.0-Release.
-- **UltraBoost Premium:** private development line; key verification and monetized key acquisition are planned separately.
+- **UltraBoost Basic:** public, keyless distribution in [kawanzyn/Ultra-boost-2.0-Release](https://github.com/kawanzyn/Ultra-boost-2.0-Release).
+- **UltraBoost Premium DEV:** internal test bundle at `dist/UltraBoost-Premium-DEV.lua`. It has no active key gate and is not a public release.
+- **Premium licensing:** backend validation, device limits, revocation and monetized key acquisition remain planned work. No fake client-side key check is used.
 
-## Preserved v0.4.0 visual engine
+## Premium DEV 2.0 features in the current bundle
 
-The Basic baseline carries forward the working three visual profiles, texture/decal/SurfaceAppearance restoration, independent optional environmental collision control, FPS estimate, touch-friendly panel, incremental scanning and batched restoration.
+- Unified responsive dashboard with Home, Optimizer, Auto, Performance Lab, Server Finder, Smart Restore, Game Profiles and Settings.
+- Custom Mode controls for textures, decals, effects, vegetation, material simplification, shadows and environment visibility.
+- Auto Optimizer with 30/45/60 FPS targets and stability hysteresis.
+- Performance Lab with current/average/min/max FPS estimates, session duration, estimated frame time, a recent stability trace, and manual baseline/optimized markers.
+- Server Finder with Empty Server, Low Population, Oldest Empty, Low Ping and Balanced filters; maximum population setting; recent-visit exclusion; refresh/history/statistics; optional 30-second auto-refresh; bounded entry attempts.
+- Smart Restore for textures, materials and Lighting, plus Restore All.
+- Quick HUD and session-only profiles keyed by PlaceId.
 
-## Premium roadmap
+## Important limits
 
-- Server Finder: public server list, five search modes, filters, pagination, cache, history, auto-refresh, statistics, and runtime-dependent entry attempts.
-- Custom Mode and visual presets.
-- Auto Optimizer and Performance Lab.
-- Smart Restore, Game Profiles and Quick Panel.
-- Server-side key validation and monetized key acquisition.
+All visual changes are local client changes. FPS is estimated from client frame updates; benchmark markers are manual samples, not a controlled performance lab. The script cannot promise a fixed frame rate, free RAM, lower server load or lower network latency.
+
+Server Finder relies on the supplied public-list endpoint and whatever HTTP/teleport capabilities the runtime exposes. Missing ping/FPS values remain unavailable. "Oldest Empty" means the earliest locally observed empty sequence, not actual server creation time. A teleport request or "started" signal is not proof of arrival.
+
+Game Profiles currently persist only in the current script session. The Premium DEV bundle is not protected by a key system. The private raw GitHub file cannot be fetched anonymously by an executor; do not embed a personal GitHub token in a loader.
 
 ## Repository layout
 
-- src/: modular visual engine.
-- src/ServerFinder/: Premium server discovery, ranking, observation history, entry adapter and UI.
-- dist/UltraBoost-Basic.lua: keyless standalone baseline.
-- docs/: design and validation notes.
+- `src/`: modular client engine and Premium dashboard.
+- `src/ServerFinder/`: HTTP adapter, discovery, ranking, observation history and entry adapter.
+- `dist/UltraBoost-Basic.lua`: keyless public baseline.
+- `dist/UltraBoost-Premium-DEV.lua`: private standalone development build.
+- `docs/`: design, compatibility and test notes.
 
-The original UltraBoost and UltraBoost-Release repositories are unchanged. This repository does not yet contain a final standalone Premium bundle or a completed key backend. Server Finder source modules are an initial implementation; live API and target-runtime tests are still pending.
+The original `UltraBoost` and `UltraBoost-Release-` repositories were not modified.
