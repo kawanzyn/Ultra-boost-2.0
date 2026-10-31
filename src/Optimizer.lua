@@ -232,6 +232,12 @@ local function applyInstance(instance: Instance, knownProtected: boolean?)
 	local environment = false
 	local textureEligible = false
 
+	-- MeshPart geometry simplification can help GPU-bound mobile devices.
+	-- It is local, opt-in through Ultra mode, and retained for Restore().
+	if mode == "Ultra" and not protected and className == "MeshPart" then
+		rememberAndSet(visualSaved, instance, "RenderFidelity", Enum.RenderFidelity.Performance)
+	end
+
 	if not protected and isPart and instance:IsDescendantOf(Workspace) then
 		ground = isGround(instance)
 		environment = instance.Anchored and not ground
