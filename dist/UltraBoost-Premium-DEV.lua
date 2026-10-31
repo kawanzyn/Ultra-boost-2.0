@@ -1,5 +1,5 @@
 --[[
-	ULTRABOOST PREMIUM DEV v2.0.0-alpha.2 (internal test build)
+	ULTRABOOST PREMIUM DEV v2.0.0-alpha.3 (internal test build)
 	Unified dashboard, reversible visual tuning, Custom Mode, Auto Optimizer,
 	Performance Lab, Smart Restore and Server Finder.
 
@@ -2315,7 +2315,7 @@ function Dashboard:_BuildSettings()
 	self.hudToggle.Position = UDim2.fromOffset(0, 27)
 	local update = self:_Card(page, 92)
 	label(update, "UPDATE CENTER", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
-	label(update, "Build local: Premium DEV 2.0 • alpha.2. Atualizações ainda são distribuídas pelo arquivo de teste.", UDim2.new(1, 0, 0, 50), C.muted, false).Position = UDim2.fromOffset(0, 25)
+	label(update, "Build local: Premium DEV 2.0 • alpha.3. Atualizações ainda são distribuídas pelo arquivo de teste.", UDim2.new(1, 0, 0, 50), C.muted, false).Position = UDim2.fromOffset(0, 25)
 	local license = self:_Card(page, 116)
 	label(license, "KEY SYSTEM", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
 	label(license, "Modo DEV • autenticação e licenças ainda não estão conectadas a um backend. Nenhuma chave é solicitada nesta compilação.", UDim2.new(1, 0, 0, 56), C.muted, false).Position = UDim2.fromOffset(0, 26)
@@ -2672,4 +2672,4 @@ monitorButton.Activated:Connect(function()
 	end
 end)
 
-print("[UltraBoost Premium DEV] v2.0.0-alpha.2 loaded. Dashboard ready.")
+print("[UltraBoost Premium DEV] v2.0.0-alpha.3 loaded. Dashboard ready.")
