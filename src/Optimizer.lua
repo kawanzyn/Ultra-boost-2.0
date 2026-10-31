@@ -211,6 +211,7 @@ local function applyInstance(instance: Instance, knownProtected: boolean?)
 	local isTextureObject = className == "Decal"
 		or className == "Texture"
 		or className == "SurfaceAppearance"
+		or className == "SpecialMesh"
 	local isEffect = isEffectObject(instance)
 
 	if not isPart and not isTextureObject and not isEffect then
@@ -249,6 +250,9 @@ local function applyInstance(instance: Instance, knownProtected: boolean?)
 		if isPart and (ground or environment) then
 			rememberAndSet(visualSaved, instance, "Material", SMOOTH)
 			rememberAndSet(visualSaved, instance, "MaterialVariant", "")
+			if className == "MeshPart" then
+				rememberAndSet(visualSaved, instance, "TextureID", "")
+			end
 			if mode == "Ultra" and environment then
 				rememberAndSet(visualSaved, instance, "LocalTransparencyModifier", 1)
 				rememberAndSet(visualSaved, instance, "CastShadow", false)
@@ -259,6 +263,8 @@ local function applyInstance(instance: Instance, knownProtected: boolean?)
 		elseif isTextureObject and textureEligible then
 			if className == "Decal" or className == "Texture" then
 				rememberAndSet(visualSaved, instance, "Transparency", 1)
+			elseif className == "SpecialMesh" then
+				rememberAndSet(visualSaved, instance, "TextureId", "")
 			else
 				for _, property in ipairs({ "ColorMap", "NormalMap", "RoughnessMap", "MetalnessMap" }) do
 					rememberAndSet(visualSaved, instance, property, "")
