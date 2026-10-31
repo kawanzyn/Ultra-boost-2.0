@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.0-alpha.4 — Mobile mesh optimization
+- Add reversible `MeshPart.RenderFidelity = Performance` in Ultra and as a Custom Mode geometry toggle.
+- Apply geometry simplification to eligible unprotected MeshParts regardless of anchoring.
+- Add selective mesh-quality restoration and extend selective texture restoration to MeshPart and SpecialMesh.
+- Continue to treat Android thermal, power, and device-level FPS caps as outside the Lua client's control.
+
 ## v2.0.0-alpha.3 — Mobile compatibility improvements
 - Prefer client `RunService.PreRender` for FPS cadence sampling, with a `Heartbeat` fallback for older runtimes.
 - Apply the Light profile immediately when Auto Optimizer is enabled from Original or Custom mode.
