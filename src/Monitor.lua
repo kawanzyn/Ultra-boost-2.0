@@ -18,7 +18,15 @@ function Monitor.Start(interval: number?, onSample: ((number) -> ())?)
 	frames = 0
 	elapsed = 0
 
-	connection = RunService.Heartbeat:Connect(function(dt)
+	local frameSignal = RunService.Heartbeat
+	local preRenderOk, preRenderSignal = pcall(function()
+		return RunService.PreRender
+	end)
+	if preRenderOk and preRenderSignal then
+		frameSignal = preRenderSignal
+	end
+
+	connection = frameSignal:Connect(function(dt)
 		frames += 1
 		elapsed += dt
 
