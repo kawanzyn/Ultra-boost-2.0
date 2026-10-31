@@ -676,12 +676,13 @@ function Dashboard:_BuildFinder()
 	end)
 	self.finderAutoButton.Position = UDim2.fromOffset(0, 44)
 
-	local status = self:_Card(page, 62)
+	local status = self:_Card(page, 78)
 	self.finderStatus = label(status, self.finderStatusText, UDim2.new(1, 0, 0, 34), C.muted, false)
 	self.finderStatus.Position = UDim2.fromOffset(0, 0)
-	self.finderStats = label(status, "Encontrados 0 • filtrados 0 • tentativas 0 • erros 0", UDim2.new(1, 0, 0, 22), C.muted, true)
-	self.finderStats.Position = UDim2.fromOffset(0, 34)
-	self.finderStats.TextSize = 8
+	self.finderStatus.TextSize = 9
+	self.finderStats = label(status, "Encontrados 0 • filtrados 0 • visitados 0", UDim2.new(1, 0, 0, 34), C.muted, true)
+	self.finderStats.Position = UDim2.fromOffset(0, 35)
+	self.finderStats.TextSize = 7
 
 	self.finderListCard = self:_Card(page, 260)
 	label(self.finderListCard, "RESULTADOS", UDim2.new(1, 0, 0, 17), C.muted, true).Position = UDim2.fromOffset(0, 0)
@@ -698,9 +699,9 @@ function Dashboard:_BuildFinder()
 		Padding = UDim.new(0, 6),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	})
-	local history = self:_Card(page, 90)
+	local history = self:_Card(page, 100)
 	label(history, "HISTÓRICO RECENTE", UDim2.new(1, 0, 0, 17), C.muted, true).Position = UDim2.fromOffset(0, 0)
-	self.finderHistory = label(history, "Nenhuma tentativa nesta sessão.", UDim2.new(1, 0, 0, 49), C.muted, false)
+	self.finderHistory = label(history, "Nenhuma tentativa nesta sessão.", UDim2.new(1, 0, 0, 58), C.muted, false)
 	self.finderHistory.Position = UDim2.fromOffset(0, 23)
 	self.finderHistory.TextSize = 8
 end
@@ -714,13 +715,18 @@ end
 function Dashboard:_RefreshFinderStats()
 	local stats = self.api.serverService:GetStats()
 	self.finderStats.Text = string.format(
-		"Únicos %d • filtrados %d • tentativas %d • falhas %d • erros %d",
-		stats.serversFound or 0, stats.discardedByFilters or 0,
-		stats.attempts or 0, stats.failures or 0, stats.requestErrors or 0
+		"Únicos %d • filtrados %d • visitados %d\\nTentativas %d • início %d • sucesso %d • falhas %d • erros %d",
+		stats.serversFound or 0, stats.discardedByFilters or 0, stats.visitedServers or 0,
+		stats.attempts or 0, stats.teleportStarted or 0, stats.successes or 0,
+		stats.failures or 0, stats.requestErrors or 0
 	)
-	local history = self.api.serverService:GetHistory(1)
-	if history[1] then
-		self.finderHistory.Text = string.sub(history[1].id, 1, 14) .. "  •  " .. tostring(history[1].state)
+	local history = self.api.serverService:GetHistory(3)
+	if #history > 0 then
+		local rows = {}
+		for index, record in ipairs(history) do
+			table.insert(rows, string.sub(record.id, 1, 12) .. " • " .. tostring(record.state))
+		end
+		self.finderHistory.Text = table.concat(rows, "\\n")
 	else
 		self.finderHistory.Text = "Nenhuma tentativa nesta sessão."
 	end
@@ -755,7 +761,8 @@ function Dashboard:_RenderFinder()
 		corner(item, 8)
 		local pop = server.playing ~= nil and (tostring(server.playing) .. "/" .. tostring(server.maxPlayers or "?") .. " jogadores") or "População indisponível"
 		local ping = server.ping ~= nil and (tostring(math.floor(server.ping + 0.5)) .. " ms") or "ping n/d"
-		local first = label(item, pop .. "  •  " .. ping, UDim2.new(1, -82, 0, 19), C.text, true)
+		local fps = server.fps ~= nil and (tostring(math.floor(server.fps + 0.5)) .. " FPS") or "FPS n/d"
+		local first = label(item, pop .. "  •  " .. ping .. "  •  " .. fps, UDim2.new(1, -82, 0, 19), C.text, true)
 		first.Position = UDim2.fromOffset(7, 5)
 		first.TextSize = 8
 		local observation = server.emptyObservedSince and ("Vazio observado há " .. timeText(os.time() - server.emptyObservedSince)) or "Observações: " .. tostring(server.observations or 1)
