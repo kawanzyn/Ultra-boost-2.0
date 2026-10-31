@@ -133,6 +133,7 @@ function Dashboard.new(screen, api)
 		simplifyMaterials = true,
 		hideShadows = true,
 		hideEnvironment = false,
+		simplifyGeometry = true,
 	}
 	self.finderMode = "Empty Server"
 	self.finderServers = {}
@@ -426,6 +427,7 @@ function Dashboard:_BuildOptimizer()
 		{ "simplifyMaterials", "Materiais simples" },
 		{ "hideShadows", "Sombras" },
 		{ "hideEnvironment", "Esconder cenário" },
+		{ "simplifyGeometry", "Geometria leve" },
 	}
 	self.customButtons = {}
 	for index, item in ipairs(toggleItems) do
@@ -948,7 +950,7 @@ function Dashboard:_BuildSettings()
 	self.hudToggle.Position = UDim2.fromOffset(0, 27)
 	local update = self:_Card(page, 92)
 	label(update, "UPDATE CENTER", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
-	label(update, "Build local: Premium DEV 2.0 • alpha.3. Atualizações ainda são distribuídas pelo arquivo de teste.", UDim2.new(1, 0, 0, 50), C.muted, false).Position = UDim2.fromOffset(0, 25)
+	label(update, "Build local: Premium DEV 2.0 • alpha.4. Atualizações ainda são distribuídas pelo arquivo de teste.", UDim2.new(1, 0, 0, 50), C.muted, false).Position = UDim2.fromOffset(0, 25)
 	local license = self:_Card(page, 116)
 	label(license, "KEY SYSTEM", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
 	label(license, "Modo DEV • autenticação e licenças ainda não estão conectadas a um backend. Nenhuma chave é solicitada nesta compilação.", UDim2.new(1, 0, 0, 56), C.muted, false).Position = UDim2.fromOffset(0, 26)
