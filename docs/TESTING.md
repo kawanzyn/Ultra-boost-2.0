@@ -36,6 +36,7 @@
 - [ ] iPhone and Android tests on real devices, recording device model, OS, Roblox version, executor/runtime version and game PlaceId.
 - [ ] On each device, record the same scene for 60 seconds before and after applying Light, Balanced and Ultra; compare the Roblox in-game FPS/debug counter or an OS-level frame counter, not only the UltraBoost estimate.
 - [ ] Verify mesh texture simplification and Restore All on both MeshPart and SpecialMesh examples.
+- [ ] Verify `Geometria leve` changes eligible MeshPart RenderFidelity and the Restore Qualidade de Malha button restores original values.
 - [ ] Confirm HTTP transport is available.
 - [ ] Confirm TeleportToPlaceInstance is callable and permitted.
 - [ ] Verify destination arrival separately from request accepted/teleport started.
