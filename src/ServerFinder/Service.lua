@@ -317,6 +317,8 @@ function Service:RecordAttempt(server, state, detail)
 		self.stats.successes += 1
 		self.visited[server.id] = { at = now }
 	end
+	self.stats.visitedServers = 0
+	for _ in pairs(self.visited) do self.stats.visitedServers += 1 end
 	return true
 end
 
