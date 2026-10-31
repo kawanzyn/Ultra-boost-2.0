@@ -24,9 +24,10 @@ jobs:
         run: |
           set -euo pipefail
           tag="$(curl -fsSL https://api.github.com/repos/luau-lang/luau/releases/latest | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
-          curl -fsSL "https://github.com/luau-lang/luau/releases/download/\${tag}/luau-ubuntu.zip" -o /tmp/luau.zip
+          download_url="$(printf 'https://github.com/luau-lang/luau/releases/download/%s/luau-ubuntu.zip' "$tag")"
+          curl -fsSL "$download_url" -o /tmp/luau.zip
           unzip -q /tmp/luau.zip -d /tmp/luau
-          echo "/tmp/luau" >> "\${GITHUB_PATH}"
+          echo "/tmp/luau" >> "$GITHUB_PATH"
 
       - name: Compile every Luau file
         shell: bash
