@@ -39,7 +39,9 @@ function EntryAdapter.new()
 			return teleportSignal:Connect(function(state, placeId)
 				local text = tostring(state)
 				if not self.lastRequested then return end
-				if string.find(text, "Started", 1, true) or string.find(text, "InProgress", 1, true) then
+				if string.find(text, "Completed", 1, true) then
+					self:_emit("completed", { jobId = self.lastRequested.jobId, placeId = placeId, state = text })
+				elseif string.find(text, "Started", 1, true) or string.find(text, "InProgress", 1, true) then
 					self:_emit("started", { jobId = self.lastRequested.jobId, placeId = placeId, state = text })
 				elseif string.find(text, "Failed", 1, true) or string.find(text, "Cancelled", 1, true) then
 					self:_emit("failed", { jobId = self.lastRequested.jobId, placeId = placeId, state = text })
