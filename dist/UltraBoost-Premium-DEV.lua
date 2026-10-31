@@ -882,7 +882,7 @@ local ServerFinderServiceModule = (function(HttpClient)
 -- Public server discovery, pagination, cache, ranking and local session history.
 -- Oldest Empty is based only on this client's observations, never a claimed server age.
 
-local HttpClient = require(script.Parent.HttpClient)
+-- HttpClient is injected by the standalone bundle closure; no ModuleScript require here.
 local Service = {}
 Service.__index = Service
 
