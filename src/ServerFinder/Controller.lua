@@ -146,9 +146,11 @@ function Controller.new(screenGui, service, entryAdapter, options)
 
 	local function refreshStats()
 		local stats = service:GetStats()
-		statsLabel.Text = string.format("Unique %d • discarded %d • visits %d • tries %d • errors %d",
-			stats.serversFound or 0, stats.discardedByFilters or 0,
-			stats.visitedServers or 0, stats.attempts or 0, stats.requestErrors or 0)
+		local updated = stats.lastUpdated and os.date("%H:%M:%S", stats.lastUpdated) or "--"
+		statsLabel.Text = string.format("Unique %d • filtered %d • visited %d\nTry %d • started %d • OK %d • failed %d • errors %d • %s",
+			stats.serversFound or 0, stats.discardedByFilters or 0, stats.visitedServers or 0,
+			stats.attempts or 0, stats.teleportStarted or 0, stats.successes or 0,
+			stats.failures or 0, stats.requestErrors or 0, updated)
 		local history = service:GetHistory(1)
 		historyLabel.Text = history[1]
 			and ("Last: " .. history[1].id:sub(1, 12) .. " • " .. tostring(history[1].state))
@@ -217,7 +219,10 @@ function Controller.new(screenGui, service, entryAdapter, options)
 			end
 		end
 
-		resultLabel.Text = string.format("%d servers • mode: %s", #self.filtered, self.mode)
+		local statsNow = service:GetStats()
+		local updatedAt = statsNow.lastUpdated and os.date("%H:%M:%S", statsNow.lastUpdated) or "--"
+		resultLabel.Text = string.format("%d servers • %s • current excluded • updated %s",
+			#self.filtered, self.mode, updatedAt)
 		refreshStats()
 	end
 

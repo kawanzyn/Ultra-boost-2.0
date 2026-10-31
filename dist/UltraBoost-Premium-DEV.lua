@@ -1,5 +1,5 @@
 --[[
-	ULTRABOOST PREMIUM DEV v2.0.0-alpha.1 (internal preview; not for distribution)
+	ULTRABOOST BASIC v2.0.0-alpha.1 (visual engine based on v0.4.0)
 	Client-side visual tuning with reversible Ultra, Balanced and Light modes.
 
 	Uses standard client-side Roblox/Luau APIs only. No HTTP loader, executor-only
@@ -25,7 +25,7 @@ if not playerGui then
 	return
 end
 
-local GUI_NAME = "UltraBoost_Premium_Dev_GUI"
+local GUI_NAME = "UltraBoost_Basic_GUI"
 if playerGui:FindFirstChild(GUI_NAME) then
 	warn("[UltraBoost] Already running. Close the existing panel first.")
 	return
@@ -662,7 +662,6 @@ local dragConnections = {}
 
 --[[ Premium Server Finder bundle. Generated from src/ServerFinder modules.
      Internal DEV build only: no key authentication or monetized unlock is active. ]]
-
 local HttpClient = (function()
 -- HTTP capability adapter for Premium Server Finder.
 -- Public GET only. No account cookies, credentials or authenticated requests.
@@ -767,7 +766,6 @@ end
 return HttpClient
 
 end)()
-
 local ServerFinderServiceModule = (function(HttpClient)
 -- Public server discovery, pagination, cache, ranking and local session history.
 -- Oldest Empty is based only on this client's observations, never a claimed server age.
@@ -869,7 +867,6 @@ function Service:_requestPage(placeId, cursor)
 			return decoded, nil, false
 		end
 	end
-	self.stats.requestErrors += 1
 	return nil, lastError or "Request failed", false
 end
 
@@ -1133,7 +1130,6 @@ end
 return Service
 
 end)(HttpClient)
-
 local EntryAdapterModule = (function()
 -- Best-effort standard TeleportService adapter.
 -- A successful method call means "requested", not "destination entered".
@@ -1241,7 +1237,6 @@ end
 return EntryAdapter
 
 end)()
-
 local ServerFinderControllerModule = (function()
 -- Touch-friendly Premium Server Finder panel. Attach to the existing ScreenGui.
 
@@ -1390,9 +1385,11 @@ function Controller.new(screenGui, service, entryAdapter, options)
 
 	local function refreshStats()
 		local stats = service:GetStats()
-		statsLabel.Text = string.format("Unique %d • discarded %d • visits %d • tries %d • errors %d",
-			stats.serversFound or 0, stats.discardedByFilters or 0,
-			stats.visitedServers or 0, stats.attempts or 0, stats.requestErrors or 0)
+		local updated = stats.lastUpdated and os.date("%H:%M:%S", stats.lastUpdated) or "--"
+		statsLabel.Text = string.format("Unique %d • filtered %d • visited %d\nTry %d • started %d • OK %d • failed %d • errors %d • %s",
+			stats.serversFound or 0, stats.discardedByFilters or 0, stats.visitedServers or 0,
+			stats.attempts or 0, stats.teleportStarted or 0, stats.successes or 0,
+			stats.failures or 0, stats.requestErrors or 0, updated)
 		local history = service:GetHistory(1)
 		historyLabel.Text = history[1]
 			and ("Last: " .. history[1].id:sub(1, 12) .. " • " .. tostring(history[1].state))
@@ -1461,7 +1458,10 @@ function Controller.new(screenGui, service, entryAdapter, options)
 			end
 		end
 
-		resultLabel.Text = string.format("%d servers • mode: %s", #self.filtered, self.mode)
+		local statsNow = service:GetStats()
+		local updatedAt = statsNow.lastUpdated and os.date("%H:%M:%S", statsNow.lastUpdated) or "--"
+		resultLabel.Text = string.format("%d servers • %s • current excluded • updated %s",
+			#self.filtered, self.mode, updatedAt)
 		refreshStats()
 	end
 
@@ -1585,7 +1585,6 @@ end
 return Controller
 
 end)()
-
 local serverFinderService = ServerFinderServiceModule.new()
 local serverFinderEntry = EntryAdapterModule.new()
 local serverFinderController = ServerFinderControllerModule.new(screen, serverFinderService, serverFinderEntry)
@@ -1719,4 +1718,4 @@ monitorButton.Activated:Connect(function()
 end)
 
 startMonitor()
-print("[UltraBoost Premium DEV] v2.0.0-alpha.1 loaded. Internal preview only.")
+print("[UltraBoost Basic] v2.0.0-alpha.1 loaded. Choose Ultra, Equilibrado or Leve.")

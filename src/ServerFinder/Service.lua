@@ -100,7 +100,6 @@ function Service:_requestPage(placeId, cursor)
 			return decoded, nil, false
 		end
 	end
-	self.stats.requestErrors += 1
 	return nil, lastError or "Request failed", false
 end
 
