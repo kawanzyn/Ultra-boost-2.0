@@ -98,6 +98,8 @@ local function restoreStore(store)
 	end
 end
 
+local restoreTerrainColors
+
 local function restoreStoreMatching(store, predicate)
 	for instance, values in pairs(store) do
 		for property, saved in pairs(values) do
@@ -134,7 +136,7 @@ local function restoreLighting()
 	restoreTerrainColors()
 end
 
-local function restoreTerrainColors()
+restoreTerrainColors = function()
 	if not Terrain then
 		table.clear(terrainColorsSaved)
 		return
