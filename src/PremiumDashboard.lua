@@ -311,6 +311,35 @@ function Dashboard.new(screen, api)
 	self.hudText.TextSize = 8
 	self.hudText.TextXAlignment = Enum.TextXAlignment.Center
 
+	-- Drag the dashboard with mouse or touch from its top bar.
+	local userInput = game:GetService("UserInputService")
+	local dragging, dragInput, dragStart, rootStart = false, nil, nil, nil
+	top.Active = true
+	table.insert(self.connections, top.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragInput = input
+			dragStart = input.Position
+			rootStart = Vector2.new(root.AbsolutePosition.X + width / 2, root.AbsolutePosition.Y + height / 2)
+		end
+	end))
+	table.insert(self.connections, userInput.InputChanged:Connect(function(input)
+		if not dragging then return end
+		if input.UserInputType ~= Enum.UserInputType.MouseMovement and input ~= dragInput then return end
+		local delta = input.Position - dragStart
+		local currentCamera = workspace.CurrentCamera
+		local bounds = currentCamera and currentCamera.ViewportSize or viewport
+		local centerX = math.clamp(rootStart.X + delta.X, width / 2, math.max(width / 2, bounds.X - width / 2))
+		local centerY = math.clamp(rootStart.Y + delta.Y, height / 2, math.max(height / 2, bounds.Y - height / 2))
+		root.Position = UDim2.fromOffset(centerX, centerY)
+	end))
+	table.insert(self.connections, userInput.InputEnded:Connect(function(input)
+		if input == dragInput or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+			dragInput = nil
+		end
+	end))
+
 	self:ShowPage("Home")
 	self:_StartSampling()
 	self:RefreshHome()
