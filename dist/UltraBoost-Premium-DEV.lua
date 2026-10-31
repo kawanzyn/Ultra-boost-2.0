@@ -527,7 +527,7 @@ local function applyCustom(settings)
 	if customSettings.hideShadows then
 		rememberAndSet(visualSaved, Lighting, "GlobalShadows", false)
 	end
-	if customSettings.hideVegetation then
+	if customSettings.hideVegetation and Terrain then
 		rememberAndSet(visualSaved, Terrain, "Decoration", false)
 	end
 	updateWatchers()
@@ -1463,6 +1463,10 @@ function Dashboard.new(screen, api)
 	self.sampleElapsed = 0
 	self.currentFps = 0
 	self.samples = {}
+	self.sessionMin = math.huge
+	self.sessionMax = 0
+	self.sessionTotal = 0
+	self.sessionSampleCount = 0
 	self.sessionStarted = os.clock()
 	self.baseline = nil
 	self.optimizedMark = nil
@@ -1816,7 +1820,7 @@ function Dashboard:_BuildAuto()
 	self.autoStatus = label(info, "Status: DESLIGADO", UDim2.new(1, 0, 0, 18), C.orange, true)
 	self.autoStatus.Position = UDim2.fromOffset(0, 76)
 
-	local target = self:_Card(page, 115)
+	local target = self:_Card(page, 152)
 	label(target, "META DE FPS", UDim2.new(1, 0, 0, 18), C.muted, true).Position = UDim2.fromOffset(0, 0)
 	local choices = { 30, 45, 60 }
 	for index, fps in ipairs(choices) do
@@ -1837,6 +1841,31 @@ function Dashboard:_BuildAuto()
 		self.autoProtectionButton.BackgroundColor3 = self.autoProtection and C.green or C.card2
 	end)
 	self.autoProtectionButton.Position = UDim2.fromOffset(0, 72)
+	self.targetCustom = make("TextBox", target, {
+		Name = "CustomTargetFPS",
+		Position = UDim2.fromOffset(0, 111),
+		Size = UDim2.new(1, 0, 0, 27),
+		BackgroundColor3 = C.card2,
+		BorderSizePixel = 0,
+		Text = "",
+		PlaceholderText = "Meta personalizada (10–240 FPS)",
+		TextColor3 = C.text,
+		PlaceholderColor3 = C.muted,
+		TextSize = 9,
+		Font = Enum.Font.Gotham,
+		ClearTextOnFocus = false,
+	})
+	corner(self.targetCustom, 7)
+	self.targetCustom.FocusLost:Connect(function()
+		local value = tonumber(self.targetCustom.Text)
+		if value then
+			self.targetFps = math.clamp(math.floor(value), 10, 240)
+			self:_RefreshTargetButtons()
+			self.autoStatus.Text = "Meta personalizada: " .. tostring(self.targetFps) .. " FPS"
+		else
+			self.targetCustom.Text = ""
+		end
+	end)
 
 	local toggle = self:_Card(page, 72)
 	self.autoToggle = button(toggle, "ATIVAR AUTO OPTIMIZER", C.blue, UDim2.new(1, 0, 0, 42), function()
@@ -2319,12 +2348,13 @@ end
 function Dashboard:_UpdateSamples(fps)
 	table.insert(self.samples, fps)
 	while #self.samples > 120 do table.remove(self.samples, 1) end
-	local avg = self:_Average(120) or fps
-	local minimum, maximum = math.huge, 0
-	for _, value in ipairs(self.samples) do
-		minimum = math.min(minimum, value)
-		maximum = math.max(maximum, value)
-	end
+	self.sessionTotal += fps
+	self.sessionSampleCount += 1
+	self.sessionMin = math.min(self.sessionMin, fps)
+	self.sessionMax = math.max(self.sessionMax, fps)
+	local avg = math.floor(self.sessionTotal / math.max(self.sessionSampleCount, 1) + 0.5)
+	local minimum = self.sessionMin
+	local maximum = self.sessionMax
 	local duration = timeText(os.clock() - self.sessionStarted)
 	if self.homeFps then
 		self.homeFps.Text = tostring(fps) .. " FPS"
@@ -2938,5 +2968,4 @@ monitorButton.Activated:Connect(function()
 	end
 end)
 
-startMonitor()
 print("[UltraBoost Premium DEV] v2.0.0-alpha.2 loaded. Dashboard ready.")
