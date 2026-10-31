@@ -1,4 +1,4 @@
-name: Sync private source to public release
+name: Sync private source to public Basic release
 
 on:
   push:
@@ -28,28 +28,60 @@ jobs:
           path: release
           ref: main
 
-      - name: Sync files
+      - name: Validate Basic-only release staging
+        working-directory: source
+        shell: bash
         run: |
-          rsync -a --delete \
-            --exclude='.git/' \
-            --exclude='.github/workflows/sync-to-release.yml' \
-            source/ release/
+          set -euo pipefail
+          test -f release-public/README.md
+          test -f release-public/CHANGELOG.md
+          test -f release-public/.github/workflows/luau-validation.yml
+          test -f dist/UltraBoost-Basic.lua
 
-          # Keep the legacy Basic loader path working in the public repository.
+          if find release-public -type f | grep -Ei '(^|/)(src|ServerFinder)(/|$)|Premium'; then
+            echo "Unsafe Premium/source content found in release-public staging."
+            exit 1
+          fi
+
+      - name: Publish allowlisted Basic files only
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Replace the public tree from a curated Basic-only allowlist.
+          # --delete removes previously published Premium/source files.
+          rsync -a --delete --exclude='.git/' source/release-public/ release/
+
+          mkdir -p release/dist
+          cp source/LICENSE release/LICENSE
+          cp source/dist/UltraBoost-Basic.lua release/dist/UltraBoost-Basic.lua
+
+          # Preserve the legacy root path for existing Basic loaders.
           cp source/dist/UltraBoost-Basic.lua release/UltraBoost.lua
+
+          # Fail closed if a private/Premium path ever enters the release tree.
+          unsafe_file="$(find release -path 'release/.git' -prune -o -type f \( -iname '*premium*' -o -path '*/src/*' -o -path '*/ServerFinder/*' \) -print -quit)"
+          if [ -n "$unsafe_file" ]; then
+            echo "Refusing to publish private content: $unsafe_file"
+            exit 1
+          fi
+
+          cmp --silent release/UltraBoost.lua release/dist/UltraBoost-Basic.lua
 
       - name: Publish changes
         working-directory: release
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add -A
 
           if git diff --cached --quiet; then
-            echo "No changes to publish."
+            echo "No Basic release changes to publish."
             exit 0
           fi
 
-          git commit -m "Automated mirror from private source"
+          git commit -m "Publish Basic-only release from private source"
           git push origin HEAD:main
