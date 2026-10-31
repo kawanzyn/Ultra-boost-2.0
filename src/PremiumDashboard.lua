@@ -715,7 +715,7 @@ end
 function Dashboard:_RefreshFinderStats()
 	local stats = self.api.serverService:GetStats()
 	self.finderStats.Text = string.format(
-		"Únicos %d • filtrados %d • visitados %d\\nTentativas %d • início %d • sucesso %d • falhas %d • erros %d",
+		"Únicos %d • filtrados %d • visitados %d\nTentativas %d • início %d • sucesso %d • falhas %d • erros %d",
 		stats.serversFound or 0, stats.discardedByFilters or 0, stats.visitedServers or 0,
 		stats.attempts or 0, stats.teleportStarted or 0, stats.successes or 0,
 		stats.failures or 0, stats.requestErrors or 0
@@ -726,7 +726,7 @@ function Dashboard:_RefreshFinderStats()
 		for index, record in ipairs(history) do
 			table.insert(rows, string.sub(record.id, 1, 12) .. " • " .. tostring(record.state))
 		end
-		self.finderHistory.Text = table.concat(rows, "\\n")
+		self.finderHistory.Text = table.concat(rows, "\n")
 	else
 		self.finderHistory.Text = "Nenhuma tentativa nesta sessão."
 	end
@@ -1106,7 +1106,11 @@ function Dashboard:_StartSampling()
 		if self.destroyed or not self.finderPending or payload.jobId ~= self.finderPending.id then return end
 		if stateName == "started" then
 			self.api.serverService:RecordAttempt(self.finderPending, "started", payload.state)
-			self.finderStatusText = "Teleporte iniciado • chegada ainda não confirmada"
+			self.finderStatusText = "Teleporte iniciado • aguardando conclusão"
+			self:_RefreshFinderStats()
+		elseif stateName == "completed" then
+			self.api.serverService:RecordAttempt(self.finderPending, "completed", payload.state)
+			self.finderStatusText = "Entrada confirmada pelo runtime"
 			self.finderPending = nil
 			self:_RefreshFinderStats()
 		elseif stateName == "failed" then
