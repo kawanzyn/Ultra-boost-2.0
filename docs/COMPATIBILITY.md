@@ -5,6 +5,8 @@ The Basic distribution preserves the earlier v0.4.0 client-side visual engine. T
 
 The dashboard is built with standard client UI services and touch/mouse input. Device-specific layout, executor restrictions and performance still require testing. FPS values are client Heartbeat estimates, not hardware telemetry or a guarantee of rendered FPS. Benchmark entries are manually recorded rolling averages.
 
+The standalone Premium DEV artifact in `dist/` is a single-file bundle: its internal modules must be injected through local bundle variables, not loaded with `require(script.Parent...)`. The modular source under `src/` retains its normal ModuleScript dependencies. Run the dashboard in a client context with `Players.LocalPlayer` and `PlayerGui` available. Executor-specific download, HTTP and teleport functions are optional capabilities and are not guaranteed by the Roblox client.
+
 ## Server Finder
 The HTTP adapter probes request/http_request, syn.request, http.request, game:HttpGet or HttpService:GetAsync. Availability and permission depend on the runtime. If no transport works, the Finder reports an error rather than fabricating results.
 
