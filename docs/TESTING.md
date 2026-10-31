@@ -13,6 +13,7 @@
 - [ ] Test collision toggle separately; server authority may override local changes.
 - [ ] Test selective texture, material and Lighting restore.
 - [ ] Confirm Auto Optimizer steps down after sustained low FPS and recovers only after sustained headroom.
+- [ ] Confirm Auto Optimizer immediately applies Light when enabled from Original/Custom, and does not reapply it when already in Light/Balanced/Ultra.
 - [ ] Check that manual FPS markers and estimates are clearly labelled.
 - [ ] Save/load a per-PlaceId profile in the same script session.
 
