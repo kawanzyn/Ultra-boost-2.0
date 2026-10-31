@@ -1,5 +1,5 @@
 --[[
-	ULTRABOOST PREMIUM DEV v2.0.0-alpha.3 (internal test build)
+	ULTRABOOST PREMIUM DEV v2.0.0-alpha.4 (internal test build)
 	Unified dashboard, reversible visual tuning, Custom Mode, Auto Optimizer,
 	Performance Lab, Smart Restore and Server Finder.
 
@@ -120,9 +120,23 @@ end
 
 local function restoreTextures()
 	restoreStoreMatching(visualSaved, function(instance, property)
-		return (instance:IsA("Decal") or instance:IsA("Texture") or instance:IsA("SurfaceAppearance"))
-			and (property == "Transparency" or property == "ColorMap" or property == "NormalMap"
-				or property == "RoughnessMap" or property == "MetalnessMap")
+		if instance:IsA("MeshPart") then
+			return property == "TextureID"
+		elseif instance:IsA("SpecialMesh") then
+			return property == "TextureId"
+		elseif instance:IsA("Decal") or instance:IsA("Texture") then
+			return property == "Transparency"
+		elseif instance:IsA("SurfaceAppearance") then
+			return property == "ColorMap" or property == "NormalMap"
+				or property == "RoughnessMap" or property == "MetalnessMap"
+		end
+		return false
+	end)
+end
+
+local function restoreMeshQuality()
+	restoreStoreMatching(visualSaved, function(instance, property)
+		return instance:IsA("MeshPart") and property == "RenderFidelity"
 	end)
 end
 
@@ -320,6 +334,21 @@ local function applyInstance(instance, knownProtected)
 	local environment = false
 	local textureEligible = false
 
+	-- Mesh geometry simplification is useful on mobile GPUs and does not require
+	-- the mesh to be anchored. Only unprotected MeshParts are affected.
+	if mode and not protected and className == "MeshPart" then
+		local usePerformanceGeometry = (customSettings and customSettings.simplifyGeometry)
+			or (not customSettings and mode == "Ultra")
+		if usePerformanceGeometry then
+			rememberAndSet(visualSaved, instance, "RenderFidelity", Enum.RenderFidelity.Performance)
+		end
+		if customSettings and customSettings.hideTextures then
+			rememberAndSet(visualSaved, instance, "TextureID", "")
+		elseif not customSettings and mode == "Ultra" then
+			rememberAndSet(visualSaved, instance, "TextureID", "")
+		end
+	end
+
 	if not protected and isPart and instance:IsDescendantOf(Workspace) then
 		ground = isGroundPart(instance)
 		environment = instance.Anchored and not ground
@@ -341,9 +370,6 @@ local function applyInstance(instance, knownProtected)
 					rememberAndSet(visualSaved, instance, "Material", SMOOTH)
 					rememberAndSet(visualSaved, instance, "MaterialVariant", "")
 				end
-				if customSettings.hideTextures and className == "MeshPart" then
-					rememberAndSet(visualSaved, instance, "TextureID", "")
-				end
 				if customSettings.hideEnvironment and environment then
 					rememberAndSet(visualSaved, instance, "LocalTransparencyModifier", 1)
 				end
@@ -355,7 +381,7 @@ local function applyInstance(instance, knownProtected)
 				end
 			elseif isTextureObject and textureEligible then
 				if (className == "Decal" and customSettings.hideDecals)
-					or ((className == "Texture" or className == "SurfaceAppearance") and customSettings.hideTextures) then
+					or ((className == "Texture" or className == "SurfaceAppearance" or className == "SpecialMesh") and customSettings.hideTextures) then
 					hideTexture(instance)
 				end
 			elseif isEffect and customSettings.hideEffects then
@@ -364,9 +390,6 @@ local function applyInstance(instance, knownProtected)
 		elseif isPart and (ground or environment) then
 			rememberAndSet(visualSaved, instance, "Material", SMOOTH)
 			rememberAndSet(visualSaved, instance, "MaterialVariant", "")
-			if className == "MeshPart" then
-				rememberAndSet(visualSaved, instance, "TextureID", "")
-			end
 
 			if mode == "Ultra" then
 				if environment then
@@ -1500,6 +1523,7 @@ function Dashboard.new(screen, api)
 		simplifyMaterials = true,
 		hideShadows = true,
 		hideEnvironment = false,
+		simplifyGeometry = true,
 	}
 	self.finderMode = "Empty Server"
 	self.finderServers = {}
@@ -1793,6 +1817,7 @@ function Dashboard:_BuildOptimizer()
 		{ "simplifyMaterials", "Materiais simples" },
 		{ "hideShadows", "Sombras" },
 		{ "hideEnvironment", "Esconder cenário" },
+		{ "simplifyGeometry", "Geometria leve" },
 	}
 	self.customButtons = {}
 	for index, item in ipairs(toggleItems) do
@@ -2215,7 +2240,7 @@ function Dashboard:_BuildRestore()
 	local info = self:_Card(page, 75)
 	label(info, "SMART RESTORE", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
 	label(info, "Restaure grupos de propriedades registrados pelo UltraBoost. Objetos que não puderam ser lidos ou alterados podem não ser recuperáveis.", UDim2.new(1, 0, 0, 40), C.muted, false).Position = UDim2.fromOffset(0, 24)
-	local actions = self:_Card(page, 208)
+	local actions = self:_Card(page, 248)
 	local restoreItems = {
 		{ "RESTORE TEXTURAS", "restoreTextures", C.card2 },
 		{ "RESTORE MATERIAIS", "restoreMaterials", C.card2 },
@@ -2229,6 +2254,11 @@ function Dashboard:_BuildRestore()
 		b.Position = UDim2.fromOffset(0, 22 + (index - 1) * 40)
 		b.TextSize = 9
 	end
+	local meshRestore = button(actions, "RESTORE QUALIDADE DE MALHA", C.card2, UDim2.new(1, 0, 0, 34), function()
+		self.api.restoreMeshQuality()
+	end)
+	meshRestore.Position = UDim2.fromOffset(0, 142)
+	meshRestore.TextSize = 9
 	local undo = button(actions, "DESFAZER ÚLTIMO MODO", C.orange, UDim2.new(1, 0, 0, 34), function()
 		self.api.restoreAll()
 		self.collisionEnabled = false
@@ -2247,7 +2277,7 @@ function Dashboard:_BuildRestore()
 		end
 		self:RefreshHome()
 	end)
-	undo.Position = UDim2.fromOffset(0, 148)
+	undo.Position = UDim2.fromOffset(0, 188)
 	undo.TextSize = 9
 	local emergency = self:_Card(page, 76)
 	self.restoreAllButton = button(emergency, "RESTORE ALL  •  EMERGÊNCIA", C.red, UDim2.new(1, 0, 0, 44), function()
@@ -2315,7 +2345,7 @@ function Dashboard:_BuildSettings()
 	self.hudToggle.Position = UDim2.fromOffset(0, 27)
 	local update = self:_Card(page, 92)
 	label(update, "UPDATE CENTER", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
-	label(update, "Build local: Premium DEV 2.0 • alpha.3. Atualizações ainda são distribuídas pelo arquivo de teste.", UDim2.new(1, 0, 0, 50), C.muted, false).Position = UDim2.fromOffset(0, 25)
+	label(update, "Build local: Premium DEV 2.0 • alpha.4. Atualizações ainda são distribuídas pelo arquivo de teste.", UDim2.new(1, 0, 0, 50), C.muted, false).Position = UDim2.fromOffset(0, 25)
 	local license = self:_Card(page, 116)
 	label(license, "KEY SYSTEM", UDim2.new(1, 0, 0, 18), C.cyan, true).Position = UDim2.fromOffset(0, 0)
 	label(license, "Modo DEV • autenticação e licenças ainda não estão conectadas a um backend. Nenhuma chave é solicitada nesta compilação.", UDim2.new(1, 0, 0, 56), C.muted, false).Position = UDim2.fromOffset(0, 26)
@@ -2531,6 +2561,7 @@ dashboard = PremiumDashboardModule.new(screen, {
 	restoreAll = restoreAll,
 	restoreTextures = restoreTextures,
 	restoreMaterials = restoreMaterials,
+	restoreMeshQuality = restoreMeshQuality,
 	restoreLighting = restoreLighting,
 	getMode = function() return activeMode or "Original" end,
 	serverService = serverFinderService,
@@ -2672,4 +2703,4 @@ monitorButton.Activated:Connect(function()
 	end
 end)
 
-print("[UltraBoost Premium DEV] v2.0.0-alpha.3 loaded. Dashboard ready.")
+print("[UltraBoost Premium DEV] v2.0.0-alpha.4 loaded. Dashboard ready.")
