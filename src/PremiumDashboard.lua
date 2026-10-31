@@ -225,13 +225,14 @@ function Dashboard.new(screen, api)
 		{ "Settings", "⚙  Ajustes" },
 	}
 	for index, item in ipairs(pages) do
-		local navButton = button(navList, item[2], C.card, UDim2.new(1, 0, 0, compact and 36 or 40), function()
-			self:ShowPage(item[1])
+		local pageName, pageLabel = item[1], item[2]
+		local navButton = button(navList, pageLabel, C.card, UDim2.new(1, 0, 0, compact and 36 or 40), function()
+			self:ShowPage(pageName)
 		end)
-		navButton.Name = "Nav_" .. item[1]
+		navButton.Name = "Nav_" .. pageName
 		navButton.LayoutOrder = index
 		navButton.TextSize = compact and 9 or 10
-		self.navButtons[item[1]] = navButton
+		self.navButtons[pageName] = navButton
 	end
 	local navFooter = label(nav, "BUILD 2.0-DEV", UDim2.new(1, -12, 0, 22), C.muted, true)
 	navFooter.Position = UDim2.new(0, 7, 1, -27)
@@ -352,8 +353,9 @@ function Dashboard:_BuildHome()
 	label(quick, "AÇÕES RÁPIDAS", UDim2.new(1, 0, 0, 16), C.muted, true).Position = UDim2.fromOffset(0, 0)
 	local modes = { { "ULTRA", "Ultra", C.blue }, { "EQUILIBRADO", "Balanced", C.card2 }, { "LEVE", "Light", C.green } }
 	for index, item in ipairs(modes) do
-		local b = button(quick, item[1], item[3], UDim2.new(1, 0, 0, 27), function()
-			self:ApplyMode(item[2])
+		local modeLabel, modeName, modeColor = item[1], item[2], item[3]
+		local b = button(quick, modeLabel, modeColor, UDim2.new(1, 0, 0, 27), function()
+			self:ApplyMode(modeName)
 		end)
 		b.Position = UDim2.fromOffset(0, 23 + (index - 1) * 31)
 		b.TextSize = 9
@@ -370,9 +372,10 @@ function Dashboard:_BuildOptimizer()
 		{ "Light", "Redução leve", C.green },
 	}
 	for index, item in ipairs(modes) do
+		local modeName, description, tint = item[1], item[2], item[3]
 		local y = 24 + (index - 1) * 34
-		local b = button(modeCard, item[1] .. "  •  " .. item[2], item[3], UDim2.new(1, 0, 0, 29), function()
-			self:ApplyMode(item[1])
+		local b = button(modeCard, modeName .. "  •  " .. description, tint, UDim2.new(1, 0, 0, 29), function()
+			self:ApplyMode(modeName)
 		end)
 		b.Position = UDim2.fromOffset(0, y)
 		b.TextXAlignment = Enum.TextXAlignment.Left
@@ -393,16 +396,17 @@ function Dashboard:_BuildOptimizer()
 	}
 	self.customButtons = {}
 	for index, item in ipairs(toggleItems) do
+		local settingKey, settingTitle = item[1], item[2]
 		local col = (index - 1) % 2
 		local row = math.floor((index - 1) / 2)
 		local toggle = button(custom, "", C.green, UDim2.new(0.5, -4, 0, 34), function()
-			self.customSettings[item[1]] = not self.customSettings[item[1]]
-			self:_UpdateCustomButton(item[1], item[2])
+			self.customSettings[settingKey] = not self.customSettings[settingKey]
+			self:_UpdateCustomButton(settingKey, settingTitle)
 		end)
 		toggle.Position = UDim2.new(col * 0.5, col == 1 and 4 or 0, 0, 66 + row * 39)
 		toggle.TextSize = 8
-		self.customButtons[item[1]] = { button = toggle, title = item[2] }
-		self:_UpdateCustomButton(item[1], item[2])
+		self.customButtons[settingKey] = { button = toggle, title = settingTitle }
+		self:_UpdateCustomButton(settingKey, settingTitle)
 	end
 	self.customApply = button(custom, "APLICAR MEU CUSTOM MODE", C.blue, UDim2.new(1, 0, 0, 32), function()
 		self:ApplyCustom()
@@ -440,14 +444,15 @@ function Dashboard:_BuildAuto()
 	label(target, "META DE FPS", UDim2.new(1, 0, 0, 18), C.muted, true).Position = UDim2.fromOffset(0, 0)
 	local choices = { 30, 45, 60 }
 	for index, fps in ipairs(choices) do
-		local b = button(target, tostring(fps) .. " FPS", C.card2, UDim2.new(1 / 3, -5, 0, 35), function()
-			self.targetFps = fps
+		local selectedTarget = fps
+		local b = button(target, tostring(selectedTarget) .. " FPS", C.card2, UDim2.new(1 / 3, -5, 0, 35), function()
+			self.targetFps = selectedTarget
 			self:_RefreshTargetButtons()
 		end)
 		b.Position = UDim2.new((index - 1) / 3, (index - 1) * 3, 0, 28)
 		b.Name = "Target_" .. tostring(fps)
 		self.targetButtons = self.targetButtons or {}
-		self.targetButtons[fps] = b
+		self.targetButtons[selectedTarget] = b
 	end
 	self:_RefreshTargetButtons()
 	self.autoProtectionButton = button(target, "PROTEÇÃO DE ESTABILIDADE: ON", C.green, UDim2.new(1, 0, 0, 31), function()
@@ -542,16 +547,17 @@ function Dashboard:_BuildFinder()
 	local modes = { "Empty Server", "Low Population", "Oldest Empty", "Low Ping", "Balanced" }
 	self.finderModeButtons = {}
 	for index, modeName in ipairs(modes) do
+		local selectedMode = modeName
 		local col = (index - 1) % 2
 		local row = math.floor((index - 1) / 2)
-		local b = button(controls, modeName, C.card2, UDim2.new(0.5, -4, 0, 27), function()
-			self.finderMode = modeName
+		local b = button(controls, selectedMode, C.card2, UDim2.new(0.5, -4, 0, 27), function()
+			self.finderMode = selectedMode
 			self:_RenderFinder()
 			self:_RefreshFinderModeButtons()
 		end)
 		b.Position = UDim2.new(col * 0.5, col == 1 and 4 or 0, 0, 56 + row * 31)
 		b.TextSize = 8
-		self.finderModeButtons[modeName] = b
+		self.finderModeButtons[selectedMode] = b
 	end
 	self:_RefreshFinderModeButtons()
 	self.finderPopulation = make("TextBox", controls, {
@@ -681,6 +687,7 @@ function Dashboard:_RenderFinder()
 		empty.TextSize = 10
 	end
 	for index, server in ipairs(self.finderFiltered) do
+		local candidate, candidateIndex = server, index
 		local item = make("Frame", self.finderList, {
 			Size = UDim2.new(1, -5, 0, 56),
 			BackgroundColor3 = C.card2,
@@ -697,10 +704,10 @@ function Dashboard:_RenderFinder()
 		local second = label(item, observation, UDim2.new(1, -82, 0, 17), C.muted, false)
 		second.Position = UDim2.fromOffset(7, 29)
 		second.TextSize = 8
-		local join = button(item, server.isCurrent and "ATUAL" or "ENTRAR", server.isCurrent and C.card or C.blue, UDim2.fromOffset(67, 34), function()
-			if not server.isCurrent then
+		local join = button(item, candidate.isCurrent and "ATUAL" or "ENTRAR", candidate.isCurrent and C.card or C.blue, UDim2.fromOffset(67, 34), function()
+			if not candidate.isCurrent then
 				self.finderCandidates = self.finderFiltered
-				self.finderCandidateIndex = index
+				self.finderCandidateIndex = candidateIndex
 				self.finderAttempts = 0
 				self.finderPending = nil
 				self:_AttemptNextServer()
@@ -708,7 +715,7 @@ function Dashboard:_RenderFinder()
 		end)
 		join.Position = UDim2.new(1, -73, 0, 11)
 		join.TextSize = 8
-		join.Active = not server.isCurrent
+		join.Active = not candidate.isCurrent
 	end
 	self.finderStatus.Text = tostring(#self.finderFiltered) .. " servidores • " .. self.finderMode .. " • " .. self.finderStatusText
 	self:_RefreshFinderStats()
@@ -774,8 +781,9 @@ function Dashboard:_BuildRestore()
 		{ "RESTORE ILUMINAÇÃO", "restoreLighting", C.card2 },
 	}
 	for index, item in ipairs(restoreItems) do
-		local b = button(actions, item[1], item[3], UDim2.new(1, 0, 0, 34), function()
-			self.api[item[2]]()
+		local actionLabel, actionName, actionColor = item[1], item[2], item[3]
+		local b = button(actions, actionLabel, actionColor, UDim2.new(1, 0, 0, 34), function()
+			self.api[actionName]()
 		end)
 		b.Position = UDim2.fromOffset(0, 22 + (index - 1) * 40)
 		b.TextSize = 9
